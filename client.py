@@ -59,6 +59,24 @@ def putFile(ns, fname):
             storageList = [ns.get_storage_list()[_] for _ in b[1]]
             send_to_storage(block_uuid, data, storageList)
 
+def delete_from_storage(block_uuid, storage):
+    addr, port = storage
+    con = rpyc.connect(addr, port=port)
+    ss = con.root.Storage()
+    return ss.delete(block_uuid)
+
+def rmFile(ns, fname):
+    file_table = ns.get_file_table_entry(fname)
+    if not file_table:
+        print("[-] File not found!")
+        return
+    
+    for block in file_table:
+        for storageServer in [ns.get_storage_list()[_] for _ in block[1]]:
+            delete_from_storage(block[0], storageServer)
+    
+    ns.delete_file_entry(fname)
+
 def processCommand(ns, parameters):
     if len(parameters) == 0:
         return
@@ -70,6 +88,8 @@ def processCommand(ns, parameters):
         getFile(ns, parameters[1])
     elif parameters[0] == "put":
         putFile(ns, parameters[1])
+    elif parameters[0] == "delete" or parameters[0] == "rm":
+        rmFile(ns, parameters[1])
     else:
         return
         

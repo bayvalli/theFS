@@ -22,6 +22,9 @@ class StorageService(rpyc.Service):
             if len(storages)>0:
                 # forward data to other storages
                 self.forward(data,storages,uuid)
+        def exposed_delete(self, uuid):
+            if os.path.isfile(DATA_DIR+str(uuid)):
+                os.remove(DATA_DIR+str(uuid))
         def forward(self,data,storages,uuid):
             print "8888: forwarding to:"
             print uuid, storages

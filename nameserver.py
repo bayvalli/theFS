@@ -55,6 +55,10 @@ class NameServerService(rpyc.Service):
             num_blocks = self.calc_num_blocks(size)
             blocks = self.alloc_blocks(fname, num_blocks)
             return blocks
+        
+        def exposed_delete_file_entry(self, fname):
+            del self.file_table[fname]
+            return
 
         def exposed_get_file_table_entry(self, fname):
             if fname in self.file_table:

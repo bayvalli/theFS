@@ -35,8 +35,6 @@ class StorageService(rpyc.Service):
             conn = rpyc.connect(host,port=port)
             storage = conn.root.Storage()
             storage.push(data,storages,uuid)
-        def delete_data(self,uuid):
-            pass
 
 if __name__ == "__main__":
     if not os.path.isdir(DATA_DIR): os.mkdir(DATA_DIR)

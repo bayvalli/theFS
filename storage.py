@@ -10,9 +10,9 @@ class StorageService(rpyc.Service):
     # exposed classes & methods
     ALIAES = ["storage"]
     def on_connect(self,conn):
-        print("[+] NameServer Connected {}".format(conn._channel.stream.sock.getpeername()))
+        print("[+] Client Connected {}".format(conn._channel.stream.sock.getpeername()))
     def on_disconnect(self,conn):
-        print("[+] NameServer Disconnected {}".format(conn._channel.stream.sock.getpeername()))
+        print("[+] Client Disconnected {}".format(conn._channel.stream.sock.getpeername()))
     class exposed_Storage():
         blocks= {}
         def exposed_pull(self,uuid):

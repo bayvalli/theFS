@@ -1,6 +1,7 @@
 import sys
 import rpyc
 import os
+import getpass
 from pprint import pprint
 
 
@@ -9,6 +10,17 @@ def usage():
 
 def parseCMD():
     return raw_input('theFS> ').split()
+
+def xor_crypt(data, key='awesomepassword', encode=False, decode=False):
+    from itertools import izip, cycle
+    import base64
+    
+    if decode:
+        data = base64.decodestring(data)
+    xored = ''.join(chr(ord(x) ^ ord(y)) for (x,y) in izip(data, cycle(key)))    
+    if encode:
+        return base64.encodestring(xored).strip()
+    return xored
 
 def getFileList(ns):
     file_table = ns.get_file_table()
@@ -28,12 +40,13 @@ def getFile(ns, fname):
         print("[-] File not found!")
         return
 
+    passphrase = getpass.getpass("Enter a passphrase to decrypt the file: ") 
     with open(fname, "w") as f:
         for block in file_table:
             for storageServer in [ns.get_storage_list()[_] for _ in block[1]]:
                 data = read_from_storage(block[0], storageServer)
                 if data:
-                    f.write(data)
+                    f.write(xor_crypt(data, passphrase, decode=True))
                     break
             else:
                 print("[-] No blocks found! Possible corruption!")
@@ -52,9 +65,10 @@ def send_to_storage(block_uuid, data, storageList):
 def putFile(ns, fname):
     size = os.path.getsize(fname)
     blocks = ns.put(fname, size)
+    passphrase = getpass.getpass("Enter a passphrase to encrypt the file: ") 
     with open(fname) as f:
         for b in blocks:
-            data = f.read(ns.get_block_size())
+            data = xor_crypt(f.read(ns.get_block_size()), passphrase, encode=True)
             block_uuid=b[0]
             storageList = [ns.get_storage_list()[_] for _ in b[1]]
             send_to_storage(block_uuid, data, storageList)

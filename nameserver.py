@@ -8,6 +8,7 @@ import signal
 import pickle
 import sys
 import os
+import socket
 from pprint import pprint
 
 from rpyc.utils.server import ThreadedServer
@@ -34,6 +35,10 @@ def set_conf():
         NameServerService.exposed_NameServer.block_mapping = pickle.load(open('fs.img', 'rb'))
 
 class NameServerService(rpyc.Service):
+    def on_connect(self,conn):
+        print("[+] Got connection from {}".format(conn._channel.stream.sock.getpeername()))
+    def on_disconnect(self,conn):
+        print("[+] Client disconnected {}".format(conn._channel.stream.sock.getpeername()))
     class exposed_NameServer():
         file_table = {}
         block_mapping = {}
@@ -41,12 +46,13 @@ class NameServerService(rpyc.Service):
 
         block_size = 0
         replication_factor = 0
-
         def exposed_get(self, fname):
             mapping = self.file_table[fname]
+            print("[+] Get {} called".format(fname))
             return mapping
 
         def exposed_put(self, fname, size):
+            print("[+] Put {} called".format(fname))
             if self.exists(fname):
                 pass
 
@@ -58,12 +64,15 @@ class NameServerService(rpyc.Service):
         
         def exposed_delete_file_entry(self, fname):
             del self.file_table[fname]
+            print("[+] File deleted {} ".format(fname))
             return
 
         def exposed_get_file_table_entry(self, fname):
             if fname in self.file_table:
+                print("[+] Get file {}".format(fname))
                 return self.file_table[fname]
             else:
+                print("[-] File is not in table {}".format(fname))
                 return None
         
         def exposed_get_file_table(self):
@@ -89,7 +98,7 @@ class NameServerService(rpyc.Service):
                 blocks.append((block_uuid, nodes_ids))
 
                 self.file_table[dest].append((block_uuid, nodes_ids))
-
+            print("[+] {} Blocks allocated".format(num))
             return blocks
 
 
